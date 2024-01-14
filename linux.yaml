@@ -1,0 +1,46 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: setting the facts
+      ansible.builtin.set_fact:
+        reboot_time: ""
+        server_name: "{{ inventory_hostname }}"
+        server_domain: "{{ ansible_domain }}"
+        server_interface: "{{ ansible_interfaces | to_nice_yaml }}"
+        distribution: "{{ ansible_distribution }}"
+        release: "{{ ansible_distribution_release }}"
+        distribution_version: "{{ ansible_distribution_version }}"
+        kernel: "{{ ansible_kernel }}"
+        architecture: "{{ ansible_architecture }}"
+        RAM: "{{ ansible_memtotal_mb }}"
+        CPU: "{{ ansible_processor | to_nice_yaml }}"
+        CPUCORE: "{{ ansible_processor_cores }}"
+
+    - name: reboot time
+      ansible.builtin.command: who -b
+      register: reboottime
+
+    - name: setting reboot time
+      ansible.builtin.set_fact:
+        reboot_time: "{{ reboottime.stdout }}"
+      when: reboottime.rc ==0
+
+    - name: display the facts
+      vars:
+       msg: |
+        reboot_time
+        - server_name
+        - server_domain
+        - server_interface
+        - distribution
+        - release
+        - distribution_version
+        - kernel
+        - architecture
+        - RAM
+        - CPU
+        - CPUCORE
+      ansible.builtin.debug:
+        msg: "{{ msg.split('\n') }}"
