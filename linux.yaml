@@ -27,20 +27,26 @@
         reboot_time: "{{ reboottime.stdout }}"
       when: reboottime.rc ==0
 
-    - name: display the facts
-      vars:
-       msg: |
-        reboot_time
-        - server_name
-        - server_domain
-        - server_interface
-        - distribution
-        - release
-        - distribution_version
-        - kernel
-        - architecture
-        - RAM
-        - CPU
-        - CPUCORE
+    - name: Top five memory hogging process
+      ansible.builtin.shell: ps -eo pmem,pid,ppid,user,stat,args --sort=-pmem|grep -v $$|head -6|sed 's/$/\n/'
+      register: memtop
+
+    - name: debug
       ansible.builtin.debug:
-        msg: "{{ msg.split('\n') }}"
+        msg: "{{ memtop.stdout_lines }}"
+
+    - name: Top five cpu hogging process
+      ansible.builtin.shell: ps -eo pcpu,pid,ppid,user,stat,args --sort=-pcpu|grep -v $$|head -6|sed 's/$/\n/'
+      register: cputop
+
+    - name: debug
+      ansible.builtin.debug:
+        msg: "{{ cputop.stdout_lines }}"
+
+    - name: uptime
+      ansible.builtin.command: uptime -p
+      register: timedtl
+
+    - name: debug
+      ansible.builtin.debug:
+        msg: "{{ timedtl.stdout_lines }}"
